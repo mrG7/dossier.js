@@ -231,8 +231,12 @@ var _DossierJS = function(window, $) {
             url_ann = encodeURIComponent(label.annotator_id),
             endpoint = ['label', url_cid1, url_cid2, url_ann].join('/'),
             params = {};
-        if (label.subtopic_id1) params.subtopic_id1 = label.subtopic_id1;
-        if (label.subtopic_id2) params.subtopic_id2 = label.subtopic_id2;
+        if (label.subtopic_id1) {
+            params.subtopic_id1 = serialize(label.subtopic_id1);
+        }
+        if (label.subtopic_id2) {
+            params.subtopic_id2 = serialize(label.subtopic_id2);
+        }
         return $.ajax({
             type: 'PUT',
             url: this.url(endpoint, params),
