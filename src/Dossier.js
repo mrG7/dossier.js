@@ -326,7 +326,8 @@ var _DossierJS = function(window, $) {
     // This function returns a jQuery promise that resolves when the web
     // service responds.
     API.prototype.addLabel = function(
-        /* <cid1, cid2, annotator, coref_value> | <label> */ ) {
+        /* <cid1, cid2, annotator, coref_value> | <label> */ )
+    {
         var label;
         if (arguments.length == 4) {
             label = new Label(arguments[0], arguments[1],
@@ -435,7 +436,7 @@ var _DossierJS = function(window, $) {
     LabelFetcher.prototype.which = function(which) {
         this._which = which;
         return this;
-    }
+    };
 
     // Move to the next page.
     LabelFetcher.prototype.next = function() {
@@ -603,7 +604,7 @@ var _DossierJS = function(window, $) {
             }
         }
         return vals;
-    }
+    };
 
     // SortingQueueItems provides SortingQueue integration with DossierJS.
     // Namely, it provides the following callback functions:
