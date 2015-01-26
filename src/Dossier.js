@@ -389,8 +389,8 @@ var _DossierJS = function(window, $) {
     // This returns a promise that is resolved to a list of `Folder`s.
     API.prototype.listFolders = function(annotator /* optional */) {
         annotator = annotator || 'unknown';
-        var annotator = annotator || 'unknown',
-            params = {annotator_id: annotator},
+
+        var params = {annotator_id: annotator},
             url = this.url('folder', params);
 
         return Xhr.getJSON('API.listFolders', url).promise()
