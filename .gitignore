@@ -1,2 +1,6 @@
 *~
+\#*
+\.\#*
 *.log
+.emacs.desktop
+.emacs.desktop.lock
