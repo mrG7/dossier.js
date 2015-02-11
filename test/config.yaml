@@ -8,5 +8,4 @@ kvlayer:
   storage_type: local
 
 dossier.store:
-  impl: treelab.store:TreelabStore
   feature_indexes: ['NAME']
