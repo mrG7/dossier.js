@@ -92,7 +92,9 @@ var _DossierJS = function(window, $) {
                         data.results[i].content_id, data.results[i].fc);
                 }
                 return data;
-            });
+            }, function () {
+                console.error("Search failed: ", url);
+            } );
     };
 
     // Retrieves a list of available search engines.
@@ -103,7 +105,10 @@ var _DossierJS = function(window, $) {
     // This returns a jQuery promise that resolves to a list of search engine
     // names.
     API.prototype.searchEngines = function() {
-        return Xhr.getJSON('API.searchEngines', this.url('search_engines'));
+        return Xhr.getJSON('API.searchEngines', this.url('search_engines'))
+            .fail(function () {
+                console.error("Failed to retrieve search engines.");
+            } );
     };
 
     // Retrieves a feature collection from the database with the given
@@ -121,7 +126,10 @@ var _DossierJS = function(window, $) {
         return Xhr.getJSON('API.fcGet', url)
             .then(function(data) {
                 return new FeatureCollection(content_id, data);
-            });
+            }, function () {
+                console.error("Failed to retrieve feature collection: ",
+                              content_id);
+            } );
     };
 
     // Fetch a set of feature collections asynchronously for the given
@@ -146,7 +154,7 @@ var _DossierJS = function(window, $) {
             fcs = [];
 
         if(content_ids.length === 0) {
-            console.log("No content ids to fetch");
+            console.warn("No content ids to fetch");
             window.setTimeout(function () { def.resolve(fcs); } );
         }
 
@@ -157,7 +165,7 @@ var _DossierJS = function(window, $) {
                     fcs.push(fc);
                 })
                 .fail(function() {
-                    console.log('Could not fetch FC for ' + cid);
+                    console.error('Could not fetch FC for ' + cid);
                 })
                 .always(function() {
                     to_resolve -= 1;
@@ -189,9 +197,9 @@ var _DossierJS = function(window, $) {
             url: url,
             data: JSON.stringify(fc.raw)
         }).fail(function() {
+            console.error("Could not save feature collection " +
+                          "(content id: '" + content_id + "')");
             console.log(fc);
-            console.log("Could not save feature collection " +
-                        "(content id: '" + content_id + "')");
         });
     };
 
@@ -205,7 +213,9 @@ var _DossierJS = function(window, $) {
         return Xhr.getJSON('API.fcRandomGet', url)
             .then(function(data) {
                 return [data[0], new FeatureCollection(data[0], data[1])];
-            });
+            }, function () {
+                console.error("Failed to retrieve random feature collection");
+            } );
     };
 
     // Adds a new label to the database, which will be used to support
@@ -251,9 +261,9 @@ var _DossierJS = function(window, $) {
             url: this.url(endpoint, params),
             contentType: 'text/plain',
             data: label.coref_value.toString()
-        }).fail(function() {
-            console.log("Could not add label:", label);
-        });
+        } ).fail(function() {
+            console.error("Could not add label:", label);
+        } );
     };
 
     // Adds an array of labels asynchronously and returns a promise that is
@@ -276,7 +286,7 @@ var _DossierJS = function(window, $) {
                     }
                 })
                 .fail(function(jqXHR, textStatus, errorThrown) {
-                    console.log("Failed to add label: " + label);
+                    console.error("Failed to add label: " + label);
                     def.reject(jqXHR, textStatus, errorThrown, label);
                 })
             );
@@ -300,7 +310,9 @@ var _DossierJS = function(window, $) {
                 return ids.map(function(id) {
                     return Folder.from_id(id, annotator);
                 });
-            });
+            }, function () {
+                console.error("Failed to list folders");
+            } );
     };
 
     // Add a new folder.
@@ -316,7 +328,7 @@ var _DossierJS = function(window, $) {
             type: 'PUT',
             url: url
         }).fail(function() {
-            console.log("Could not add folder:", folder);
+            console.error("Could not add folder:", folder);
         });
     };
 
@@ -334,7 +346,9 @@ var _DossierJS = function(window, $) {
                 return ids.map(function(id) {
                     return Subfolder.from_id(folder, id);
                 });
-            });
+            }, function () {
+                console.error("Failed to list subfolders of folder:", folder);
+            } );
     };
 
     // Add an item to a subfolder. If the subfolder does not already exist,
@@ -365,8 +379,8 @@ var _DossierJS = function(window, $) {
             type: 'PUT',
             url: url
         }).fail(function() {
-            console.log("Could not add subfolder with item:",
-                        subfolder, content_id, subtopic_id);
+            console.error("Could not add subfolder with item:",
+                          subfolder, content_id, subtopic_id);
         });
     };
 
@@ -383,7 +397,10 @@ var _DossierJS = function(window, $) {
                 'folder', subfolder.folder.id, 'subfolder', subfolder.id
             ].join('/'),
             url = this.url(endpoint, params);
-        return Xhr.getJSON('API.listSubfolderItems', url);
+        return Xhr.getJSON('API.listSubfolderItems', url)
+            .fail(function () {
+                console.error("Failed to list items in subfolder:", subfolder);
+            } );
     };
 
     API.prototype.stop = function () {
@@ -499,7 +516,10 @@ var _DossierJS = function(window, $) {
         }
         if (this._page) params.page = this._page;
         if (this._perpage) params.perpage = this._perpage;
-        var url = this.api.url(endpoint, params);
+
+        var self = this,
+            url = this.api.url(endpoint, params);
+
         return Xhr.getJSON('LabelFetcher.get', url)
             .then(function(labels) {
                 return labels.map(function(label) {
@@ -508,7 +528,10 @@ var _DossierJS = function(window, $) {
                                      label.subtopic_id1 || undefined,
                                      label.subtopic_id2 || undefined);
                 });
-            });
+            }, function () {
+                console.error("Failed to retrieve labels for id:",
+                              self._cid);
+            } );
     };
 
     // Constructs a new label.
@@ -824,10 +847,10 @@ var _DossierJS = function(window, $) {
 
             window.setTimeout(function () {
                 if(self._processing) {
-                    console.log('moreTexts in progress, ignoring new request');
+                    console.warn('moreTexts in progress; ignoring');
                     deferred.reject( { error: "Request in progress" } );
                 } else {
-                    console.log('Query content id not yet set');
+                    console.error('Query content id not yet set');
                     deferred.reject( { error: "No query content id" } );
                 }
             } );
@@ -856,7 +879,7 @@ var _DossierJS = function(window, $) {
                 self._processing = false;
             })
             .fail(function() {
-                console.log("moreTexts: request failed");
+                console.error("moreTexts: request failed");
             });
     };
 
