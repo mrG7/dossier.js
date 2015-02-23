@@ -85,7 +85,7 @@ var _DossierJS = function(window, $) {
             'search',
             engine_name,
         ].join('/'), params);
-        return Xhr.getJSON('API.search', url).promise()
+        return Xhr.getJSON('API.search', url)
             .then(function(data) {
                 for (var i = 0; i < data.results.length; i++) {
                     data.results[i].fc = new FeatureCollection(
@@ -118,7 +118,7 @@ var _DossierJS = function(window, $) {
     API.prototype.fcGet = function(content_id) {
         var url = this.url('feature-collection/'
                            + encodeURIComponent(serialize(content_id)));
-        return Xhr.getJSON('API.fcGet', url).promise()
+        return Xhr.getJSON('API.fcGet', url)
             .then(function(data) {
                 return new FeatureCollection(content_id, data);
             });
@@ -202,7 +202,7 @@ var _DossierJS = function(window, $) {
     // is a `FeatureCollection`.
     API.prototype.fcRandomGet = function() {
         var url = this.url('random/feature-collection');
-        return Xhr.getJSON('API.fcRandomGet', url).promise()
+        return Xhr.getJSON('API.fcRandomGet', url)
             .then(function(data) {
                 return [data[0], new FeatureCollection(data[0], data[1])];
             });
@@ -253,7 +253,7 @@ var _DossierJS = function(window, $) {
             data: label.coref_value.toString()
         }).fail(function() {
             console.log("Could not add label:", label);
-        }).promise();
+        });
     };
 
     // Adds an array of labels asynchronously and returns a promise that is
@@ -295,7 +295,7 @@ var _DossierJS = function(window, $) {
         var params = {annotator_id: annotator},
             url = this.url('folder', params);
 
-        return Xhr.getJSON('API.listFolders', url).promise()
+        return Xhr.getJSON('API.listFolders', url)
             .then(function(ids) {
                 return ids.map(function(id) {
                     return Folder.from_id(id, annotator);
@@ -317,7 +317,7 @@ var _DossierJS = function(window, $) {
             url: url
         }).fail(function() {
             console.log("Could not add folder:", folder);
-        }).promise();
+        });
     };
 
     // List all subfolders belonging to a particular folder.
@@ -329,7 +329,7 @@ var _DossierJS = function(window, $) {
         var params = {annotator_id: folder.annotator},
             endpoint = ['folder', folder.id, 'subfolder'].join('/'),
             url = this.url(endpoint, params);
-        return Xhr.getJSON('API.listSubfolders', url).promise()
+        return Xhr.getJSON('API.listSubfolders', url)
             .then(function(ids) {
                 return ids.map(function(id) {
                     return Subfolder.from_id(folder, id);
@@ -367,7 +367,7 @@ var _DossierJS = function(window, $) {
         }).fail(function() {
             console.log("Could not add subfolder with item:",
                         subfolder, content_id, subtopic_id);
-        }).promise();
+        });
     };
 
     // Lists all of the items in a particular subfolder.
@@ -383,7 +383,7 @@ var _DossierJS = function(window, $) {
                 'folder', subfolder.folder.id, 'subfolder', subfolder.id
             ].join('/'),
             url = this.url(endpoint, params);
-        return Xhr.getJSON('API.listSubfolderItems', url).promise();
+        return Xhr.getJSON('API.listSubfolderItems', url);
     };
 
     API.prototype.stop = function () {
@@ -500,7 +500,7 @@ var _DossierJS = function(window, $) {
         if (this._page) params.page = this._page;
         if (this._perpage) params.perpage = this._perpage;
         var url = this.api.url(endpoint, params);
-        return Xhr.getJSON('LabelFetcher.get', url).promise()
+        return Xhr.getJSON('LabelFetcher.get', url)
             .then(function(labels) {
                 return labels.map(function(label) {
                     return new Label(label.content_id1, label.content_id2,
