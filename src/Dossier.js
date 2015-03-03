@@ -913,9 +913,10 @@ var _DossierJS = function(window, $) {
                 $.getJSON.apply($, Array.prototype.splice.call(arguments, 1)));
         };
 
-        var stop = function (type)
+        var stop = function (/* undefined | string | array<string> */ types)
         {
-            if(type === undefined) {
+            /* Cancel all ongoing requests if `types´ not given. */
+            if(types === undefined) {
                 for(var k in requests_) {
                     requests_[k].forEach(function (r) {
                         r.abort();
@@ -923,17 +924,24 @@ var _DossierJS = function(window, $) {
                 }
 
                 requests_ = { };
-            } else {
-                var reqs = get(type);
-
-                if(reqs !== null) {
-                    reqs.forEach(function (r) {
-                        r.abort();
-                    } );
-
-                    delete requests_[type];
-                }
+                return;
             }
+
+            /* Turn `types´ into an array if not one. */
+            if(!(types instanceof Array))
+                types = [ types ];
+
+            /* Cancel each request type. */
+            types.forEach(function (t) {
+                if(typeof t !== 'string')
+                    throw "Invalid type specified";
+
+                var reqs = get(t);
+                if(reqs !== null) {
+                    reqs.forEach(function (r) { r.abort(); } );
+                    delete requests_[t];
+                }
+            } );
         };
 
         var get = function (type)
