@@ -1033,7 +1033,7 @@ if(typeof define === "function" && define.amd) {
         return _DossierJS(window, $);
     });
 } else {
-    var DossierJS = _DossierJS(window, $);
+    window.DossierJS = _DossierJS(window, $);
 }
 
 
