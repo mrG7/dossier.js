@@ -55,12 +55,10 @@ var failed = function(done) {
 /* Test specifications */
 describe('DossierJS.API', function() {
   beforeEach(function() {
-    console.log("1");
     api = new DossierJS.API(BASE_URL);
   });
 
   it('builds valid URLs', function() {
-    console.log("HERE");
     var got = api.url('search_engines'),
         expected = [BASE_URL, 'dossier', 'v1', 'search_engines'].join('/');
 
@@ -68,13 +66,11 @@ describe('DossierJS.API', function() {
   });
 
   it('returns a list of search engines', function(done) {
-    console.log("HERE");
     api.searchEngines().done(function(engines) {
       expect(engines.length > 0).toBe(true);
       done();
     });
   });
-
 
   describe('feature collection', function () {
     it('stores', function(done) {
@@ -189,7 +185,7 @@ describe('DossierJS.API', function() {
            .done(function() { labelExists(api, lab.cid1, lab, done); })
            .fail(function() { failed(done); });
        }, done);
-                      });
+    });
 
     it('adds labels with subtopics that are NOT part of a label traversal',
        function(done) { withFc(function () {
