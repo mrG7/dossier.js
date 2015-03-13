@@ -1,10 +1,18 @@
+/* Globals & module-related */
+var expect = chai.expect;
+
 /* Constants */
 var BASE_URL = (function() {
-  var re = /host=([^&]+)/.exec(window.location.search),
-      host = !!re ? re[1] : 'localhost';
-  var re = /port=([0-9]+)/.exec(window.location.search),
-      port = !!re ? re[1] : '8001';
-  return 'http://' + host + ':' + port;
+  var wls = window.location.search;
+
+  function pget(re, def) {
+    return (re = re.exec(wls)) === null ? def : re[1];
+  }
+
+  return [ 'http://',
+           pget(/[?&]host=([a-zA-Z0-9_\-.]+)(&|$)/, '54.174.195.250'),
+           ':',
+           pget(/[?&]port=([0-9]+)(&|$)/, '8080') ].join('');
 })();
 
 /* Attributes */
@@ -37,40 +45,45 @@ var labelExists = function (api, cid, label, done, fetcher, invert)
 
 var withFc = function(fn, done)
 {
-  expect(haveFc).toBe(true);
+  expect(haveFc).to.be.true;
 
-  if(haveFc)  fn();
-  else        done();
+  if(haveFc) fn();
+  else       done();
 };
 
 var passed = function(done) {
-  expect(true).toEqual(true); if (done) done();
+  expect(true).to.be.true; if (done) done();
 };
 
 var failed = function(done) {
-  expect(true).toEqual(false); if (done) done();
+  expect(true).to.be.false; if (done) done();
 };
 
 
 /* Test specifications */
 describe('DossierJS.API', function() {
+  /* Increase timeout to 5s (from default 2s). */
+  this.timeout(5000);
+
   beforeEach(function() {
     api = new DossierJS.API(BASE_URL);
   });
+
 
   it('builds valid URLs', function() {
     var got = api.url('search_engines'),
         expected = [BASE_URL, 'dossier', 'v1', 'search_engines'].join('/');
 
-    expect(got).toEqual(expected);
+    expect(got).to.equal(expected);
   });
 
   it('returns a list of search engines', function(done) {
     api.searchEngines().done(function(engines) {
-      expect(engines.length > 0).toBe(true);
+      expect(engines.length > 0).to.be.true;
       done();
-    });
+    }).fail(function () { failed(done); } );
   });
+
 
   describe('feature collection', function () {
     it('stores', function(done) {
@@ -86,7 +99,7 @@ describe('DossierJS.API', function() {
       withFc(function () {
         api.fcGet('abc')
           .done(function(got) {
-            expect(got).toEqual(fc);
+            expect(got).to.eql(fc);
             done();
           })
           .fail(function() { failed(done); });
@@ -129,7 +142,7 @@ describe('DossierJS.API', function() {
         var lab = new DossierJS.Label('a', 'b', 'tester',
                                       DossierJS.COREF_VALUE_NEGATIVE);
 
-        expect(haveFc).toBe(true);
+        expect(haveFc).to.be.true;
         haveFc && api.addLabel(lab)
           .done(function() { labelExists(api, lab.cid1, lab, done); })
           .fail(function() { failed(done); });
@@ -211,35 +224,41 @@ describe('DossierJS.API', function() {
            })
            .fail(function() { failed(done); });
        }, done);
-      });
+    });
 
-      it('paginates labels', function(done) {
-        withFc(function () {
-          var lab1 = new DossierJS.Label('p', 'a', 'tester',
-                                         DossierJS.COREF_VALUE_POSITIVE);
-          var lab2 = new DossierJS.Label('p', 'b', 'tester',
-                                         DossierJS.COREF_VALUE_POSITIVE);
-          var fetcher = function(f) { return f.perpage(1).next(); };
-          api.addLabel(lab1)
-            .fail(function() { failed(done); })
-            .done(function() {
-              api.addLabel(lab2)
-                .fail(function() { failed(done); })
-                .done(function() {
-                  labelExists(api, 'p', lab1, done, fetcher, true);
+    it('paginates labels', function(done) {
+      withFc(function () {
+        var lab1 = new DossierJS.Label('p', 'a', 'tester',
+                                       DossierJS.COREF_VALUE_POSITIVE);
+        var lab2 = new DossierJS.Label('p', 'b', 'tester',
+                                       DossierJS.COREF_VALUE_POSITIVE);
+        var fetcher = function(f) { return f.perpage(1).next(); };
+        api.addLabel(lab1)
+          .fail(function() { failed(done); })
+          .done(function() {
+            api.addLabel(lab2)
+              .fail(function() { failed(done); })
+              .done(function() {
+                /* Don't pass `done´ or moch will rightly complain that `done´
+                 * will have been called twice when `labelExists´ is next
+                 * executed. */
+                labelExists(api, 'p', lab1, next_1, fetcher, true);
+
+                function next_1() {
                   labelExists(api, 'p', lab2, done, fetcher);
-                });
-            });
-        }, done);
-      });
+                }
+              });
+          });
+      }, done);
+    });
   });
 
 
   describe('searching', function () {
     it('basic random', function(done) {
       api.search('random', content_id, {limit: '1'}).done(function(r) {
-        expect(r.results[0].content_id).toEqual(content_id);
-        expect(r.results[0].fc).toEqual(fc);
+        expect(r.results[0].content_id).to.equal(content_id);
+        expect(r.results[0].fc).to.equal(fc);
         done();
       }).fail(function() { failed(done); });
     });
@@ -252,7 +271,7 @@ describe('DossierJS.API', function() {
 
       api.addFolder(f).done(function() {
         api.listFolders().done(function(folders) {
-          console.log(folders[i]);
+/*           console.log(folders[i]); */
           for (var i = 0; i < folders.length; i++) {
             if (folders[i].id === f.id) {
               passed(done);
@@ -305,27 +324,27 @@ describe('DossierJS.API', function() {
       }).fail(function() { failed(done); });
     });
   });
-});
 
 
-describe('DossierJS.FeatureCollection', function() {
-  it('returns correct StringCounter values', function() {
-    var fc = new DossierJS.FeatureCollection('a', {'NAME': {'foo': 1}});
-    expect(fc.value('NAME')).toEqual('foo');
-  });
+  describe('DossierJS.FeatureCollection', function() {
+    it('returns correct StringCounter values', function() {
+      var fc = new DossierJS.FeatureCollection('a', {'NAME': {'foo': 1}});
+      expect(fc.value('NAME')).to.equal('foo');
+    });
 
-  it('returns correct string values', function() {
-    var fc = new DossierJS.FeatureCollection('a', {'NAME': 'foo'});
-    expect(fc.value('NAME')).toEqual('foo');
-  });
+    it('returns correct string values', function() {
+      var fc = new DossierJS.FeatureCollection('a', {'NAME': 'foo'});
+      expect(fc.value('NAME')).to.equal('foo');
+    });
 
-  it('returns null for non-existent features', function() {
-    var fc = new DossierJS.FeatureCollection();
-    expect(fc.feature('Jim_Bob_Rockie_the_3rd')).toBeNull();
-  });
+    it('returns null for non-existent features', function() {
+      var fc = new DossierJS.FeatureCollection();
+      expect(fc.feature('Jim_Bob_Rockie_the_3rd')).to.be.null;
+    });
 
-  it('returns null for non-existent values', function() {
-    var fc = new DossierJS.FeatureCollection();
-    expect(fc.value('Billy_Ray_Trigger')).toBeNull();
+    it('returns null for non-existent values', function() {
+      var fc = new DossierJS.FeatureCollection();
+      expect(fc.value('Billy_Ray_Trigger')).to.be.null;
+    });
   });
 });

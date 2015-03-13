@@ -13,7 +13,7 @@ module.exports = function(grunt) {
         }
       }
     },
-    "saucelabs-jasmine": {
+    "saucelabs-mocha": {
       all: {
         options: {
           urls: ["http://127.0.0.1:9999/test/index.html"],
@@ -37,5 +37,5 @@ module.exports = function(grunt) {
   }
 
   grunt.registerTask("dev", ["connect", "watch"]);
-  grunt.registerTask("test", ["connect", "saucelabs-jasmine"]);
+  grunt.registerTask("test", ["connect", "saucelabs-mocha"]);
 };
