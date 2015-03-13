@@ -4,3 +4,4 @@
 *.log
 .emacs.desktop
 .emacs.desktop.lock
+node_modules/

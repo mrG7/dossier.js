@@ -58,6 +58,7 @@ var _DossierJS = function(window, $) {
 
         var version = 'v' + this.api_versions[service].toString();
         var base = [this.prefix, service, version, endpoint].join('/');
+        console.log((base + '?' + $.param(params, true)).replace(/\?$/, ''));
         return (base + '?' + $.param(params, true)).replace(/\?$/, '');
     };
 
