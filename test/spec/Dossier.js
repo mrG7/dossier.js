@@ -256,10 +256,11 @@ describe('DossierJS.API', function() {
 
   describe('searching', function () {
     it('basic random', function(done) {
-      api.search('random', content_id, {limit: '1'}).done(function(r) {
-        expect(r.results[0].content_id).to.equal(content_id);
-        expect(r.results[0].fc).to.equal(fc);
-        done();
+      api.fcPut(content_id, fc).done(function() {
+        api.search('random', content_id, {limit: '1'}).done(function(r) {
+          expect(r.results[0].content_id).to.equal(content_id);
+          done();
+        }).fail(function() { failed(done); });
       }).fail(function() { failed(done); });
     });
   });
@@ -271,7 +272,6 @@ describe('DossierJS.API', function() {
 
       api.addFolder(f).done(function() {
         api.listFolders().done(function(folders) {
-/*           console.log(folders[i]); */
           for (var i = 0; i < folders.length; i++) {
             if (folders[i].id === f.id) {
               passed(done);
