@@ -253,19 +253,6 @@ describe('DossierJS.API', function() {
     });
   });
 
-
-  describe('searching', function () {
-    it('basic random', function(done) {
-      api.fcPut(content_id, fc).done(function() {
-        api.search('random', content_id, {limit: '1'}).done(function(r) {
-          expect(r.results[0].content_id).to.equal(content_id);
-          done();
-        }).fail(function() { failed(done); });
-      }).fail(function() { failed(done); });
-    });
-  });
-
-
   describe('foldering', function () {
     it('adds folders', function(done) {
       var f = DossierJS.Folder.from_name('dog');
