@@ -372,13 +372,16 @@ var _DossierJS = function(window, $) {
     // Note that there is no way to add a subfolder without an item in it.
     // Empty subfolders cannot exist!
     API.prototype.addSubfolderItem = function(subfolder, content_id,
-                                              subtopic_id) {
+                                              subtopic_id /* optional */) {
         var params = {annotator_id: subfolder.folder.annotator},
             endpoint = [
                 'folder', subfolder.folder.id, 'subfolder', subfolder.id,
-                serialize(content_id), serialize(subtopic_id),
-            ].join('/'),
-            url = this.url(endpoint, params);
+                serialize(content_id),
+            ];
+        if (typeof subtopic_id !== 'undefined') {
+            endpoint.push(serialize(subtopic_id));
+        }
+        var url = this.url(endpoint.join('/'), params);
         return Xhr.ajax('API.addSubfolderItem', {
             type: 'PUT',
             url: url
