@@ -58,8 +58,21 @@ var _DossierJS = function(window, $) {
 
         var version = 'v' + this.api_versions[service].toString();
         var base = [this.prefix, service, version, endpoint].join('/');
-        console.log((base + '?' + $.param(params, true)).replace(/\?$/, ''));
         return (base + '?' + $.param(params, true)).replace(/\?$/, '');
+    };
+
+    API.prototype.fcCacheEnabled = function() {
+        var deferred = $.Deferred(),
+            req = Xhr.ajax('API.fcCacheEnabled', {
+                type: 'GET',
+                url: this.url('fc-cache-enabled'),
+            }).done(function() { deferred.resolve(true); })
+              .fail(function() { deferred.resolve(false); });
+        return deferred.promise();
+    };
+
+    API.prototype.fcCacheUrl = function(content_id) {
+        return this.url(['feature-collection', content_id, 'cache'].join('/'));
     };
 
     // Performs a search using the given search engine name. The search

@@ -84,6 +84,19 @@ describe('DossierJS.API', function() {
     }).fail(function () { failed(done); } );
   });
 
+  it('has cache disabled', function(done) {
+      api.fcCacheEnabled().done(function(enabled) {
+          if (enabled) { failed(done); } else { passed(done); }
+      });
+  });
+
+  it('properly constructs cache URLs', function() {
+      var got = api.fcCacheUrl('abc'),
+          expected = [BASE_URL, 'dossier', 'v1',
+                      'feature-collection', 'abc', 'cache'].join('/');
+      expect(got).to.equal(expected);
+  });
+
 
   describe('feature collection', function () {
     it('stores', function(done) {
