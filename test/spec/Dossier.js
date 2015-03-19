@@ -84,6 +84,19 @@ describe('DossierJS.API', function() {
     }).fail(function () { failed(done); } );
   });
 
+  it('has cache disabled', function(done) {
+      api.fcCacheEnabled().done(function(enabled) {
+          if (enabled) { failed(done); } else { passed(done); }
+      });
+  });
+
+  it('properly constructs cache URLs', function() {
+      var got = api.fcCacheUrl('abc'),
+          expected = [BASE_URL, 'dossier', 'v1',
+                      'feature-collection', 'abc', 'cache'].join('/');
+      expect(got).to.equal(expected);
+  });
+
 
   describe('feature collection', function () {
     it('stores', function(done) {
@@ -253,25 +266,12 @@ describe('DossierJS.API', function() {
     });
   });
 
-
-  describe('searching', function () {
-    it('basic random', function(done) {
-      api.search('random', content_id, {limit: '1'}).done(function(r) {
-        expect(r.results[0].content_id).to.equal(content_id);
-        expect(r.results[0].fc).to.equal(fc);
-        done();
-      }).fail(function() { failed(done); });
-    });
-  });
-
-
   describe('foldering', function () {
     it('adds folders', function(done) {
       var f = DossierJS.Folder.from_name('dog');
 
       api.addFolder(f).done(function() {
         api.listFolders().done(function(folders) {
-/*           console.log(folders[i]); */
           for (var i = 0; i < folders.length; i++) {
             if (folders[i].id === f.id) {
               passed(done);

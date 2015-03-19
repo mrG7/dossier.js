@@ -59,8 +59,21 @@ var _DossierJS = function(window, $, undefined) {
 
         var version = 'v' + this.api_versions[service].toString();
         var base = [this.prefix, service, version, endpoint].join('/');
-        console.log((base + '?' + $.param(params, true)).replace(/\?$/, ''));
         return (base + '?' + $.param(params, true)).replace(/\?$/, '');
+    };
+
+    API.prototype.fcCacheEnabled = function() {
+        var deferred = $.Deferred(),
+            req = Xhr.ajax('API.fcCacheEnabled', {
+                type: 'GET',
+                url: this.url('fc-cache-enabled'),
+            }).done(function() { deferred.resolve(true); })
+              .fail(function() { deferred.resolve(false); });
+        return deferred.promise();
+    };
+
+    API.prototype.fcCacheUrl = function(content_id) {
+        return this.url(['feature-collection', content_id, 'cache'].join('/'));
     };
 
     // Performs a search using the given search engine name. The search
@@ -374,14 +387,17 @@ var _DossierJS = function(window, $, undefined) {
     // Note that there is no way to add a subfolder without an item in it.
     // Empty subfolders cannot exist!
     API.prototype.addSubfolderItem = function(subfolder, content_id,
-                                              subtopic_id) {
+                                              subtopic_id /* optional */) {
         var params = {annotator_id: subfolder.folder.annotator},
             endpoint = [
                 'folder', subfolder.folder.id, 'subfolder', subfolder.id,
-                serialize(content_id), serialize(subtopic_id),
-            ].join('/'),
-            url = this.url(endpoint, params);
-        return this.xhr.ajax('API.addSubfolderItem', {
+                serialize(content_id),
+            ];
+        if (typeof subtopic_id !== 'undefined') {
+            endpoint.push(serialize(subtopic_id));
+        }
+        var url = this.url(endpoint.join('/'), params);
+        return Xhr.ajax('API.addSubfolderItem', {
             type: 'PUT',
             url: url
         }).fail(function() {
@@ -1066,7 +1082,7 @@ if(typeof define === "function" && define.amd) {
         return _DossierJS(window, $);
     });
 } else {
-    var DossierJS = _DossierJS(window, $);
+    window.DossierJS = _DossierJS(window, $);
 }
 
 
