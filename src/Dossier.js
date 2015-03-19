@@ -64,7 +64,7 @@ var _DossierJS = function(window, $, undefined) {
 
     API.prototype.fcCacheEnabled = function() {
         var deferred = $.Deferred(),
-            req = Xhr.ajax('API.fcCacheEnabled', {
+            req = this.xhr.ajax('API.fcCacheEnabled', {
                 type: 'GET',
                 url: this.url('fc-cache-enabled'),
             }).done(function() { deferred.resolve(true); })
