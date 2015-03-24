@@ -8,7 +8,7 @@
  */
 
 
-var _DossierJS = function(window, $) {
+var _DossierJS = function(window, $, undefined) {
     /* Constants */
     var API_VERSION = {
         dossier: 1
@@ -34,7 +34,8 @@ var _DossierJS = function(window, $) {
     var API = function(url_prefix, api_versions) {
         this.api_versions = $.extend(true, {}, API_VERSION,
                                      api_versions || {});
-        this.prefix = url_prefix || '';
+        this.xhr = new Xhr(url_prefix || '');
+        this.prefix = this.xhr.url;
     };
 
     // Constructs a URL given a service (e.g., `dossier` or `streamcorpus`),
@@ -63,7 +64,7 @@ var _DossierJS = function(window, $) {
 
     API.prototype.fcCacheEnabled = function() {
         var deferred = $.Deferred(),
-            req = Xhr.ajax('API.fcCacheEnabled', {
+            req = this.xhr.ajax('API.fcCacheEnabled', {
                 type: 'GET',
                 url: this.url('fc-cache-enabled'),
             }).done(function() { deferred.resolve(true); })
@@ -103,7 +104,7 @@ var _DossierJS = function(window, $) {
             'search',
             engine_name,
         ].join('/'), params);
-        return Xhr.getJSON('API.search', url)
+        return this.xhr.getJSON('API.search', url)
             .then(function(data) {
                 for (var i = 0; i < data.results.length; i++) {
                     data.results[i].fc = new FeatureCollection(
@@ -123,7 +124,8 @@ var _DossierJS = function(window, $) {
     // This returns a jQuery promise that resolves to a list of search engine
     // names.
     API.prototype.searchEngines = function() {
-        return Xhr.getJSON('API.searchEngines', this.url('search_engines'))
+        return this.xhr.getJSON('API.searchEngines',
+                                this.url('search_engines'))
             .fail(function () {
                 console.error("Failed to retrieve search engines.");
             } );
@@ -141,7 +143,7 @@ var _DossierJS = function(window, $) {
     API.prototype.fcGet = function(content_id) {
         var url = this.url('feature-collection/'
                            + encodeURIComponent(serialize(content_id)));
-        return Xhr.getJSON('API.fcGet', url)
+        return this.xhr.getJSON('API.fcGet', url)
             .then(function(data) {
                 return new FeatureCollection(content_id, data);
             }, function () {
@@ -209,7 +211,7 @@ var _DossierJS = function(window, $) {
     API.prototype.fcPut = function(content_id, fc) {
         var url = this.url('feature-collection/'
                            + encodeURIComponent(serialize(content_id)));
-        return Xhr.ajax('API.fcPut', {
+        return this.xhr.ajax('API.fcPut', {
             type: 'PUT',
             contentType: 'application/json',
             url: url,
@@ -228,7 +230,7 @@ var _DossierJS = function(window, $) {
     // is a `FeatureCollection`.
     API.prototype.fcRandomGet = function() {
         var url = this.url('random/feature-collection');
-        return Xhr.getJSON('API.fcRandomGet', url)
+        return this.xhr.getJSON('API.fcRandomGet', url)
             .then(function(data) {
                 return [data[0], new FeatureCollection(data[0], data[1])];
             }, function () {
@@ -277,7 +279,7 @@ var _DossierJS = function(window, $) {
         if (label.subtopic_id2) {
             params.subtopic_id2 = serialize(label.subtopic_id2);
         }
-        return Xhr.ajax('API.addLabel', {
+        return this.xhr.ajax('API.addLabel', {
             type: 'PUT',
             url: this.url(endpoint, params),
             contentType: 'text/plain',
@@ -326,7 +328,7 @@ var _DossierJS = function(window, $) {
         var params = {annotator_id: annotator},
             url = this.url('folder', params);
 
-        return Xhr.getJSON('API.listFolders', url)
+        return this.xhr.getJSON('API.listFolders', url)
             .then(function(ids) {
                 return ids.map(function(id) {
                     return Folder.from_id(id, annotator);
@@ -345,7 +347,7 @@ var _DossierJS = function(window, $) {
     API.prototype.addFolder = function(folder) {
         var params = {annotator_id: folder.annotator},
             url = this.url('folder/' + folder.id, params);
-        return Xhr.ajax('API.addFolder', {
+        return this.xhr.ajax('API.addFolder', {
             type: 'PUT',
             url: url
         }).fail(function() {
@@ -362,7 +364,7 @@ var _DossierJS = function(window, $) {
         var params = {annotator_id: folder.annotator},
             endpoint = ['folder', folder.id, 'subfolder'].join('/'),
             url = this.url(endpoint, params);
-        return Xhr.getJSON('API.listSubfolders', url)
+        return this.xhr.getJSON('API.listSubfolders', url)
             .then(function(ids) {
                 return ids.map(function(id) {
                     return Subfolder.from_id(folder, id);
@@ -399,7 +401,7 @@ var _DossierJS = function(window, $) {
             endpoint.push(serialize(subtopic_id));
         }
         var url = this.url(endpoint.join('/'), params);
-        return Xhr.ajax('API.addSubfolderItem', {
+        return this.xhr.ajax('API.addSubfolderItem', {
             type: 'PUT',
             url: url
         }).fail(function() {
@@ -421,14 +423,14 @@ var _DossierJS = function(window, $) {
                 'folder', subfolder.folder.id, 'subfolder', subfolder.id
             ].join('/'),
             url = this.url(endpoint, params);
-        return Xhr.getJSON('API.listSubfolderItems', url)
+        return this.xhr.getJSON('API.listSubfolderItems', url)
             .fail(function () {
                 console.error("Failed to list items in subfolder:", subfolder);
             } );
     };
 
     API.prototype.stop = function () {
-        return Xhr.stop.apply(Xhr, arguments);
+        return this.xhr.stop.apply(this.xhr, arguments);
     };
 
     // A convenience class for fetching labels.
@@ -544,7 +546,7 @@ var _DossierJS = function(window, $) {
         var self = this,
             url = this.api.url(endpoint, params);
 
-        return Xhr.getJSON('LabelFetcher.get', url)
+        return this.api.xhr.getJSON('LabelFetcher.get', url)
             .then(function(labels) {
                 return labels.map(function(label) {
                     return new Label(label.content_id1, label.content_id2,
@@ -914,111 +916,141 @@ var _DossierJS = function(window, $) {
             });
     };
 
-    // Internal XHR handling. Useful for canceling existing requests.
-    var Xhr = (function () {
+    /**
+     * @class
+     * Internal XHR handling.
+     *
+     * Useful for cancelling existing requests.
+     * */
+    var Xhr = function (url)
+    {
+        if(typeof url !== 'string')
+            throw "Invalid url specified";
+
         /* Attributes */
-        var requests_ = { };
+        this.requests_ = { };
 
-        /* Interface */
-        var ajax = function ()
-        {
-            return add_(
-                get_type_(arguments),
-                $.ajax.apply($, Array.prototype.splice.call(arguments, 1)));
-        };
+        /* Attempt to match username:password form in given URL. */
+        var m = url.match(
+                /^(?:https?:\/\/)?(([a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)@)?/);
+        if(m !== null && m[1] !== undefined) {
+            this.username = m[2];
+            this.password = m[3];
 
-        var getJSON = function ()
-        {
-            return add_(
-                get_type_(arguments),
-                $.getJSON.apply($, Array.prototype.splice.call(arguments, 1)));
-        };
+            /* Remove `username:password´ form from URL. */
+            url = url.replace(/([a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+@)/, "");
+        }
 
-        var stop = function (/* undefined | string | array<string> */ types)
-        {
-            /* Cancel all ongoing requests if `types´ not given. */
-            if(types === undefined) {
-                for(var k in requests_) {
-                    requests_[k].forEach(function (r) {
-                        r.abort();
-                    } );
-                }
+        Object.defineProperty(this, 'url', { value: url });
+    };
 
-                requests_ = { };
-                return;
+    /* Interface */
+    Xhr.prototype.ajax = function ()
+    {
+        if(arguments.length < 1)
+            throw "Arguments missing";
+
+        /* If `username´ contains something, then we're using basic auth. */
+        if(this.username) {
+            var options = arguments[1];
+
+            /* Create a `headers´ attribute if non-existent. */
+            if(!("headers" in options))
+                options.headers = { };
+
+            /* Add base64-encoded username and password to appropriate header. */
+            options.headers.Authorization = "Basic "
+                + btoa(this.username + ":" + this.password);
+        }
+
+        return this.add_(
+            this.get_type_(arguments),
+            $.ajax.apply($, Array.prototype.splice.call(arguments, 1)));
+    };
+
+    Xhr.prototype.getJSON = function ()
+    {
+        /* Route via the `ajax´ method. */
+        return this.ajax(arguments[0], {
+            dataType: "JSON",
+            url: arguments[1]
+        } );
+    };
+
+    Xhr.prototype.stop = function (/* string | void */ type)
+    {
+        /* Stop ALL requests if `type´ is undefined.  Otherwise, stop only XHR
+         * requests of the specified type. */
+        if(type === undefined) {
+            for(var k in this.requests_) {
+                this.requests_[k].forEach(function (r) {
+                    r.abort();
+                } );
             }
 
-            /* Turn `types´ into an array if not one. */
-            if(!(types instanceof Array))
-                types = [ types ];
+            this.requests_ = { };
+        } else {
+            if(typeof type !== 'string')
+                throw "Invalid type specified";
 
-            /* Cancel each request type. */
-            types.forEach(function (t) {
-                if(typeof t !== 'string')
-                    throw "Invalid type specified";
+            var reqs = this.get(type);
 
-                var reqs = get(t);
-                if(reqs !== null) {
-                    reqs.forEach(function (r) { r.abort(); } );
-                    delete requests_[t];
-                }
-            } );
-        };
+            if(reqs !== null) {
+                reqs.forEach(function (r) {
+                    r.abort();
+                } );
 
-        var get = function (type)
-        {
-            return requests_[type] || null;
-        };
-
-        /* Private interface */
-        var add_ = function (type, xhr)
-        {
-            var reqs = requests_[type];
-
-            /* Create empty array if no requests exist for this type. */
-            if(!reqs)
-                reqs = requests_[type] = [ ];
-
-            /* Delete request once it completes, ensuring that the request type
-             * is also deleted when requests no longer exist. */
-            reqs.push(xhr.always(function () {
-                if(!reqs.some(function (r, i) {
-                    if(r === xhr) {
-                        reqs.splice(i, 1);
-                        if(reqs.length === 0)
-                            delete requests_[type];
-                        return true;
-                    }
-                } ) ) {
-                    console.error("Failed to remove request: %s: ", type, xhr);
-                } else {
-                    /* console.log("Removed request: ", requests_); */
-                }
-            } ) );
-
-            /* console.log("Added xhr: %s: ", type, requests_); */
-            return xhr;
-        };
-
-        var get_type_ = function (args)
-        {
-            if(args.length < 2) {
-                throw "Invalid arguments specified. Expect `type´ and arguments"
-                    + " for `ajax´ call";
+                delete this.requests_[type];
             }
+        }
+    };
 
-            return args[0];
-        };
+    Xhr.prototype.get = function (type)
+    {
+        return this.requests_[type] || null;
+    };
 
+    /* Private interface */
+    Xhr.prototype.add_ = function (type, xhr)
+    {
+        var self = this,
+            reqs = this.requests_[type];
 
-        /* Public interface */
-        return {
-            ajax: ajax,
-            getJSON: getJSON,
-            stop: stop
-        };
+        /* Create empty array if no requests exist for this type. */
+        if(!reqs)
+            reqs = this.requests_[type] = [ ];
 
-    } )();
+        /* Delete request once it completes, ensuring that the request type
+         * is also deleted when requests no longer exist. */
+        reqs.push(xhr.always(function () {
+            if(!reqs.some(function (r, i) {
+                if(r === xhr) {
+                    reqs.splice(i, 1);
+                    if(reqs.length === 0)
+                        delete self.requests_[type];
+                    return true;
+                }
+            } ) ) {
+                console.error("Failed to remove request: %s: ", type, xhr);
+            } else {
+                /* console.log("Removed request: ", requests_); */
+            }
+        } ) );
+
+        /* console.log("Added xhr: %s: ", type, requests_); */
+        return xhr;
+    };
+
+    Xhr.prototype.get_type_ = function (args)
+    {
+        if(args.length < 2) {
+            throw "Invalid arguments specified. Expect `type´ and arguments"
+                + " for `ajax´ call";
+        }
+
+        return args[0];
+    };
+
 
     function serialize(obj) {
         return typeof obj.serialize === 'function' ? obj.serialize() : obj;
