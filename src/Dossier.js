@@ -8,7 +8,16 @@
  */
 
 
-var _DossierJS = function(window, $, undefined) {
+(function (factory, root) {
+
+    if(typeof define === "function" && define.amd) {
+        define("DossierJS", ["jquery"], function($) {
+            return factory(root, $);
+        });
+    } else
+        window.DossierJS = factory(root, $);
+
+})(function (window, $, undefined) {
     /* Constants */
     var API_VERSION = {
         dossier: 1
@@ -955,15 +964,8 @@ var _DossierJS = function(window, $, undefined) {
         Folder: Folder,
         Subfolder: Subfolder
     };
-};
 
-if(typeof define === "function" && define.amd) {
-    define("DossierJS", ["jquery"], function($) {
-        return _DossierJS(window, $);
-    });
-} else {
-    window.DossierJS = _DossierJS(window, $);
-}
+}, window);
 
 
 /*  Emacs settings     */
