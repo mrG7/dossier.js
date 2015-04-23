@@ -1,6 +1,6 @@
 /** Dossier.js --- Diffeo's dossier.web API
  *
- * Copyright (C) 2014 Diffeo
+ * Copyright (C) 2014, 2015 Diffeo
  *
  * Comments:
  *
