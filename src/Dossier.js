@@ -837,7 +837,7 @@ var _DossierJS = function(window, $, undefined) {
 
             /* Add base64-encoded username and password to appropriate header. */
             options.headers.Authorization = "Basic "
-                + btoa(this.username + ":" + this.password);
+                + window.btoa(this.username + ":" + this.password);
         }
 
         return this.add_(
