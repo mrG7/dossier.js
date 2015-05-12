@@ -283,6 +283,36 @@ describe('DossierJS.API', function() {
       }).fail(function() { failed(done); });
     });
 
+    it('deletes folders', function(done) {
+      var f = DossierJS.Folder.from_name('dog');
+
+      api.addFolder(f).done(function() {
+        api.deleteFolder(f)
+           .done(function() { passed(done); })
+           .fail(function() { failed(done); });
+      }).fail(function() { failed(done); });
+    });
+
+    it('renames folders', function(done) {
+      var f = DossierJS.Folder.from_name('dog');
+      var f2 = DossierJS.Folder.from_name('cat');
+
+      api.addFolder(f).done(function() {
+        api.renameFolder(f, f2).done(function() {
+            api.listFolders().done(function(folders) {
+              for (var i = 0; i < folders.length; i++) {
+                console.log(folders[i]);
+                if (folders[i].id === f2.id) {
+                  passed(done);
+                  return;
+                }
+              }
+              failed(done);
+            }).fail(function() { failed(done); });
+        }).fail(function() { failed(done); });
+      }).fail(function() { failed(done); });
+    });
+
     it('adds subfolders', function(done) {
       var f = DossierJS.Folder.from_name('dog'),
           sf = DossierJS.Subfolder.from_name(f, 'bruce');
@@ -299,6 +329,32 @@ describe('DossierJS.API', function() {
             }
             failed(done);
           }).fail(function() { failed(done); });
+        }).fail(function() { failed(done); });
+      }).fail(function() { failed(done); });
+    });
+
+    it('deletes subfolders', function(done) {
+      var f = DossierJS.Folder.from_name('dog'),
+          sf = DossierJS.Subfolder.from_name(f, 'bruce');
+
+      api.addFolder(f).done(function() {
+        api.addSubfolderItem(sf, 'abcd', 'wxyz').done(function() {
+          api.deleteSubfolder(sf).done(function() { passed(done); })
+                                 .fail(function() { failed(done); });
+        }).fail(function() { failed(done); });
+      }).fail(function() { failed(done); });
+    });
+
+    it('renames subfolders', function(done) {
+      var f = DossierJS.Folder.from_name('dog'),
+          sf = DossierJS.Subfolder.from_name(f, 'bruce'),
+          sf2 = DossierJS.Subfolder.from_name(f, 'boss');
+
+      api.addFolder(f).done(function() {
+        api.addSubfolderItem(sf, 'abcd', 'wxyz').done(function() {
+          api.renameSubfolder(sf, sf2)
+             .done(function() { passed(done); })
+             .fail(function() { failed(done); });
         }).fail(function() { failed(done); });
       }).fail(function() { failed(done); });
     });
@@ -320,6 +376,19 @@ describe('DossierJS.API', function() {
             }
             failed(done);
           }).fail(function() { failed(done); });
+        }).fail(function() { failed(done); });
+      }).fail(function() { failed(done); });
+    });
+
+    it('deletes subfolder items', function(done) {
+      var f = DossierJS.Folder.from_name('dog'),
+          sf = DossierJS.Subfolder.from_name(f, 'holly');
+
+      api.addFolder(f).done(function() {
+        api.addSubfolderItem(sf, 'abcd', 'wxyz').done(function() {
+          api.deleteSubfolderItem(sf, 'abcd', 'wxyz')
+             .done(function() { passed(done); })
+             .fail(function() { failed(done); });
         }).fail(function() { failed(done); });
       }).fail(function() { failed(done); });
     });
