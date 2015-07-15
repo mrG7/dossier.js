@@ -105,24 +105,30 @@
     // a `results` key, which maps to an array of objects that each have
     // two keys: `content_id` and `fc`, which have type `string` and
     // `FeatureCollection`, respectively.
-    API.prototype.search = function(engine_name, content_id, params) {
+    API.prototype.search = function(engine_name, content_id, params, method) {
+        method = method || 'GET';
         params = params || {};
         var url = this.url([
             'feature-collection',
             encodeURIComponent(serialize(content_id)),
             'search',
             engine_name,
-        ].join('/'), params);
-        return this.xhr.getJSON('API.search', url)
-            .then(function(data) {
-                for (var i = 0; i < data.results.length; i++) {
-                    data.results[i].fc = new FeatureCollection(
-                        data.results[i].content_id, data.results[i].fc);
-                }
-                return data;
-            }, function () {
-                console.error("Search failed: ", url);
-            } );
+        ].join('/'));
+        return this.xhr.ajax('API.search', {
+            dataType: 'JSON',
+            url: url,
+            data: params,
+            type: method,
+            traditional: true,
+        }).then(function(data) {
+                    for (var i = 0; i < data.results.length; i++) {
+                        data.results[i].fc = new FeatureCollection(
+                            data.results[i].content_id, data.results[i].fc);
+                    }
+                    return data;
+                }, function () {
+                    console.error("Search failed: ", url);
+                } );
     };
 
     // Retrieves a list of available search engines.
