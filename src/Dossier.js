@@ -43,7 +43,8 @@
     var API = function(url_prefix, api_versions) {
         this.api_versions = $.extend(true, {}, API_VERSION,
                                      api_versions || {});
-        this.xhr = new Xhr(url_prefix || '');
+        /* Remove any trailing slashes before passing URL in. */
+        this.xhr = new Xhr(url_prefix.replace(/\/+$/, "") || '');
         this.prefix = this.xhr.url;
     };
 
@@ -523,6 +524,7 @@
         return this.xhr.stop.apply(this.xhr, arguments);
     };
 
+
     // A convenience class for fetching labels.
     //
     // Since querying labels can be complex, constructing a query follow the
@@ -885,6 +887,90 @@
 
     /**
      * @class
+     * */
+    var PollingRequest = function (api, url, prefix)
+    {
+        this.api = api;
+        this.url = url;
+        this.prefix = prefix + ".";
+        this.xhr = { };
+    };
+
+    PollingRequest.prototype.post = function ()
+    { return this.request_("post"); };
+
+    PollingRequest.prototype.get = function ()
+    { return this.request_("get"); };
+
+    PollingRequest.prototype.abort = function ()
+    {
+        for(var k in this.xhr) {
+            var xhr = this.xhr[k];
+            if(xhr === null) continue;
+
+            xhr.abort();
+            this.xhr[k] = null;
+        }
+    };
+
+    /* Private interface */
+    PollingRequest.prototype.request_ = function (req)
+    {
+        if(this.xhr[req]) throw "Already processing: " + req.toUpperCase();
+
+        var self = this;
+        return this.xhr[req] = this.api.xhr.ajax(this.prefix + req, {
+            type: req.toUpperCase(),
+            url: this.url
+        } ).fail(function () {
+            console.error("Request %s failed [%s]",
+                          req.toUpperCase(),
+                          this.url);
+        } ).always(function () { self.xhr[req] = null; } );
+    };
+
+
+    /**
+     * @class
+     * */
+    var OpenQuery = function (api, folder, subfolder)
+    {
+        PollingRequest.call(
+            this,
+            api,
+            api.url(
+                [
+                    "folder",    this.folder.id,
+                    "subfolder", this.subfolder.id,
+                    "extract"
+                ].join("/"),
+                { }
+            ),
+            "OQ"
+        );
+    };
+
+    OpenQuery.prototype = Object.create(PollingRequest.prototype);
+
+
+    /**
+     * @class
+     * */
+    var Dragnet = function (api)
+    {
+        PollingRequest.call(
+            this,
+            api,
+            api.url("dragnet"),
+            "DN"
+        );
+    };
+
+    Dragnet.prototype = Object.create(PollingRequest.prototype);
+
+
+    /**
+     * @class
      * Internal XHR handling.
      *
      * Useful for cancelling existing requests.
@@ -1043,7 +1129,9 @@
         Label: Label,
         LabelFetcher: LabelFetcher,
         Folder: Folder,
-        Subfolder: Subfolder
+        Subfolder: Subfolder,
+        OpenQuery: OpenQuery,
+        Dragnet: Dragnet
     };
 
 }, window);
