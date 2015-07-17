@@ -940,8 +940,8 @@
             api,
             api.url(
                 [
-                    "folder",    this.folder.id,
-                    "subfolder", this.subfolder.id,
+                    "folder",    folder.id,
+                    "subfolder", subfolder.id,
                     "extract"
                 ].join("/"),
                 { }
