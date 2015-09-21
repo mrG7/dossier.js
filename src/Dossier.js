@@ -885,6 +885,125 @@
     }
 
 
+    var Tags = function (api)
+    {
+        this.associate = function (
+            tag, url, text, id, hash, xpath, timestamp /* = now */
+        ) {
+            var descriptor = {
+                url: url,
+                text: text,
+                stream_id: id,
+                hash: hash,
+                timestamp: timestamp ||
+                    Math.round(new Date().getTime()/1000),
+                xpath: xpath
+            };
+
+            return api.xhr.ajax('API.tags.associate', {
+                type: 'POST',
+                url: api.url("tags/associations/tag/"
+                             + encodeURIComponent(tag)),
+                data: JSON.stringify(descriptor)
+            }).fail(function () {
+                console.error("tags: association between %s and %s failed",
+                              url, tag);
+            });
+        };
+
+        this.disassociate = function ()
+        {
+            return $.Deferred(function (d) {
+                window.setTimeout(function () {
+                    d.resolve();
+                }, 1000);
+            }).promise();
+        };
+
+        this.listChildren = function (tag)
+        {
+            return api.xhr.ajax('API.tags.listChildren', {
+                type: 'GET',
+                url: api.url("tags/list/" + encodeURIComponent(tag))
+            }).fail(function () {
+                console.error("tags: failed to list children tags: %s", tag);
+            });
+        };
+
+        this.suggest = function (prefix, parent /* = null */)
+        {
+            if(!prefix) throw "Invalid prefix";
+            var url = api.url(
+                "tags/suggest/prefix/" + prefix
+            );
+            if(parent) url += "/parent/" + parent.replace(/\/$/, "");
+
+            return api.xhr.ajax('API.tags.suggest', {
+                type: 'GET',
+                url: url
+            }).fail(function () {
+                console.error(
+                    "tags: failed to list children tags: %s (%s)",
+                    prefix, parent
+                );
+            });
+        };
+
+        this.listById = function (id)
+        {
+            return api.xhr.ajax('API.tags.listById', {
+                type: 'GET',
+                url: api.url(
+                    "tags/associations/stream_id/" + encodeURIComponent(id)
+                )
+            }).fail(function () {
+                console.error(
+                    "tags: failed to list tags for stream id: %s", id
+                );
+            });
+        };
+
+        this.listByUrl = function (url)
+        {
+            return api.xhr.ajax('API.tags.listByUrl', {
+                type: 'GET',
+                url: api.url(
+                    "tags/associations/url/" + encodeURIComponent(url)
+                )
+            }).fail(function () {
+                console.error("tags: failed to list tags for url: %s", url);
+            });
+        };
+
+        this.listByTag = function (tag)
+        {
+            return api.xhr.ajax('API.tags.listByTag', {
+                type: 'GET',
+                url: api.url(
+                    "tags/associations/tag/" + encodeURIComponent(tag)
+                )
+            }).fail(function () {
+                console.error(
+                    "tags: failed to list associations for tag: %s", tag
+                );
+            });
+        };
+
+        this.tags = function (d)
+        {
+            if("associations" in d) d = d.associations;
+            else if("children" in d) d = d.children;
+            else throw "Unknown data";
+
+            if(!(d instanceof Array)) throw "Not descriptors array";
+
+            var tags = {};
+            d.forEach(function (t) { tags[t.tag] = true; });
+            return Object.keys(tags);
+        };
+    };
+
+
     /**
      * @class
      * */
@@ -1141,7 +1260,8 @@
         Folder: Folder,
         Subfolder: Subfolder,
         OpenQuery: OpenQuery,
-        Dragnet: Dragnet
+        Dragnet: Dragnet,
+        Tags: Tags
     };
 
 }, window);
